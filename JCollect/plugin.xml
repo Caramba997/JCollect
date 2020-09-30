@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+
+	<extension point="org.eclipse.ui.views">
+		<category
+			name="JCollect"
+			id="fc.jcollect.category"/>
+		<view id="fc.view"
+			name="JCollect Results"
+			class="jcollect.views.JCollectView"
+			category="fc.jcollect.category"
+			icon="icons\FC Icon.png"/>
+	</extension>
+	
+	<extension point="org.eclipse.ui.commands">
+		<command
+			id="fc.jcollect.command"
+			name="Start"
+			defaultHandler="jcollect.handlers.AnalysisHandler"/>
+	</extension>
+	
+	<extension point="org.eclipse.ui.menus">
+		<menuContribution
+			locationURI="popup:org.eclipse.jdt.ui.PackageExplorer">
+			<menu
+				label="JCollect"
+				id="fc.jcollect.menu"
+				icon="icons\Sample.png">
+				<command
+					commandId="fc.jcollect.command"
+					label="Analyse"
+					tooltip="Start Analysis"
+					icon="icons\Sample.png"/>
+			</menu>
+		</menuContribution>
+	</extension>
+	
+	<extension point="org.eclipse.ui.console.consoleFactories">
+		<consoleFactory
+			class="jcollect.handlers.ConsoleFactory"
+			icon="icons/FC Icon.png"
+			label="JCollect Console">
+		</consoleFactory>
+	</extension>
+	
+	<extension
+		point="org.eclipse.core.filebuffers.annotationModelCreation">
+		<factory
+			extensions="jav"
+			class="org.eclipse.ui.texteditor.ResourceMarkerAnnotationModelFactory">
+		</factory>
+	</extension>
+
+	<extension
+		id="jcollect.misusemarker"
+		name="jcollect.misusemarker"
+		point="org.eclipse.core.resources.markers">
+		<super type="org.eclipse.core.resources.textmarker"/>
+	</extension>
+	
+	<extension
+		point="org.eclipse.ui.editors.annotationTypes">
+		<type
+			markerSeverity="2"
+			markerType="jcollect.misusemarker"
+			super="org.eclipse.ui.workbench.texteditor.error"
+			name="jcollect.misuseannotation">
+		</type>
+	</extension>
+	
+	<extension
+		point="org.eclipse.ui.editors.markerAnnotationSpecification">
+		<specification
+			annotationType="jcollect.misuseannotation"
+			colorPreferenceKey="jcollect_annotationcolor"
+			colorPreferenceValue="125,125,0"
+			contributesToHeader="false"
+			highlightPreferenceKey="jcollect_highlight"
+			highlightPreferenceValue="true"
+			includeOnPreferencePage="true"
+			isGoToNextNavigationTarget="false"
+			isGoToPreviousNavigationTarget="false"
+			label="JCollect Misuse"
+			overviewRulerPreferenceKey="jcollect_overview"
+			overviewRulerPreferenceValue="true"
+			showInNextPrevDropdownToolbarAction="false"
+			textPreferenceKey="jcollect_text"
+			textPreferenceValue="true"
+			textStylePreferenceKey="jcollect_textstyle"
+			textStylePreferenceValue="BOX"
+			verticalRulerPreferenceKey="jcollect_vertical"
+			verticalRulerPreferenceValue="true">
+		</specification>
+	</extension>
+	
+	<extension
+		id="jcollect.warningmarker"
+		name="jcollect.warningmarker"
+		point="org.eclipse.core.resources.markers">
+		<super type="org.eclipse.core.resources.textmarker"/>
+	</extension>
+	
+	<extension
+		point="org.eclipse.ui.editors.annotationTypes">
+		<type
+			markerSeverity="1"
+			markerType="jcollect.warningmarker"
+			super="org.eclipse.ui.workbench.texteditor.warning"
+			name="jcollect.warningannotation">
+		</type>
+	</extension>
+	
+	<extension
+		point="org.eclipse.ui.editors.markerAnnotationSpecification">
+		<specification
+			annotationType="jcollect.warningannotation"
+			colorPreferenceKey="jcollect_annotationcolor"
+			colorPreferenceValue="125,125,0"
+			contributesToHeader="false"
+			highlightPreferenceKey="jcollect_highlight"
+			highlightPreferenceValue="true"
+			includeOnPreferencePage="true"
+			isGoToNextNavigationTarget="false"
+			isGoToPreviousNavigationTarget="false"
+			label="JCollect Misuse"
+			overviewRulerPreferenceKey="jcollect_overview"
+			overviewRulerPreferenceValue="true"
+			showInNextPrevDropdownToolbarAction="false"
+			textPreferenceKey="jcollect_text"
+			textPreferenceValue="true"
+			textStylePreferenceKey="jcollect_textstyle"
+			textStylePreferenceValue="BOX"
+			verticalRulerPreferenceKey="jcollect_vertical"
+			verticalRulerPreferenceValue="true">
+		</specification>
+	</extension>
+
+</plugin>

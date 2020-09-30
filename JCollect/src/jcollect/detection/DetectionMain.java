@@ -33,10 +33,10 @@ public class DetectionMain {
 	 * The found APIs are passed to the next step.
 	 * @param ifile An IFile which will be checked for misuses
 	 */
-	public DetectionMain(IFile ifile) {
+	public DetectionMain(IFile ifile, boolean first) {
 		long startTime = System.nanoTime();
 		File file = Platform.getLocation().append(ifile.getFullPath()).toFile();
-		ConsolePrinter.println("Starting to parse file: " + file.getAbsolutePath());
+		ConsolePrinter.println("Starting to parse file <" + file.getAbsolutePath() + "> ...");
 		try {
 			CompilationUnit cu = StaticJavaParser.parse(file);
 			ConsolePrinter.println("[SUCCESS] Parsing successful");
@@ -59,12 +59,14 @@ public class DetectionMain {
 				ConsolePrinter.println("  " + m);
 			}
 			if (JCollectView.view != null) {
-				JCollectView.view.setMisuses(misuses, ifile);
+				JCollectView.view.setMisuses(misuses, ifile, first);
 			}
-			try {
-				IDE.openEditor(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage(), ifile, true);
-			} catch (PartInitException e) {
-				ConsolePrinter.println("[ERROR] Could not open editor");
+			if (first) {
+				try {
+					IDE.openEditor(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage(), ifile, true);
+				} catch (PartInitException e) {
+					ConsolePrinter.println("[ERROR] Could not open editor");
+				}
 			}
 			createEditorMarkers(misuses, ifile);
 		}

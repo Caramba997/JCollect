@@ -29,9 +29,12 @@ public class AnalysisHandler extends AbstractHandler {
 			try {
 				PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().showView("fc.view");
 			} catch (PartInitException e) {
-				ConsolePrinter.println("[Error] Could not open result view");
+				ConsolePrinter.println("[ERROR] Could not open result view");
 			}
-			new DetectionMain(selectedFile);
+			ConsolePrinter.println("[EXECUTING] Analysing single file");
+			new DetectionMain(selectedFile, true);
+			ConsolePrinter.println("[ENDED]");
+			ConsolePrinter.println("--------------------");
 		}
 		else {
 			ConsolePrinter.println("[ERROR] No file selected. You need to select a Java file");
@@ -57,10 +60,11 @@ public class AnalysisHandler extends AbstractHandler {
 	                    file = (IResource) ((IAdaptable) obj).getAdapter(IResource.class);
 	                }
 	            }
-	            if (file != null) {
-	            	if (file instanceof IFile) {
-	            		return (IFile) file;
-	            	}
+	            if (file != null && file instanceof IFile) {
+	            	IFile ifile = (IFile) file;
+            		if (ifile.getName().contains(".java")) {
+            			return ifile;
+            		}
 	            }
 	        }
 	    }

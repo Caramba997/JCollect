@@ -1,7 +1,9 @@
 package jcollect.views;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.jface.text.BadLocationException;
@@ -36,6 +38,8 @@ import jcollect.util.ConsolePrinter;
  */
 public class JCollectView extends ViewPart {
 	private Table table;
+	private Map<Integer, IFile> entries;
+	private int currentSize;
 	public static JCollectView view;
 	
 	/**
@@ -53,14 +57,16 @@ public class JCollectView extends ViewPart {
 
 	@Override
 	public void createPartControl(Composite parent) {
+		entries = new HashMap<>();
+		currentSize = 0;
 		table = new Table(parent, SWT.SINGLE | SWT.FULL_SELECTION | SWT.V_SCROLL | SWT.BORDER);
 		table.setLinesVisible(true);
 		table.setHeaderVisible(true);
 		GridData data = new GridData(SWT.FILL, SWT.FILL, true, true);
 		table.setLayoutData(data);
-		String[] titles = {"Line", "Type", "Name", "Description"};
+		String[] titles = {"File", "Line", "Type", "Name", "Description"};
 		List<TableColumn> columns = new ArrayList<TableColumn>();
-		for (int i = 0; i < 4; i++) {
+		for (int i = 0; i < 5; i++) {
 			TableColumn column = new TableColumn(table, SWT.NONE);
 			column.setText(titles[i]);
 			columns.add(column);
@@ -78,26 +84,60 @@ public class JCollectView extends ViewPart {
 				}
 				Point oldSize = table.getSize();
 				if (oldSize.x > area.width) {
-					for (int i = 0; i < 4; i++) {
+					for (int i = 0; i < 5; i++) {
 						switch (i) {
-						case 0: columns.get(i).setWidth(width / 20); break;
-						case 1: columns.get(i).setWidth(width / 10); break;
-						case 2: columns.get(i).setWidth(width / 5); break;
-						case 3: columns.get(i).setWidth(width * 13 / 20); break;
+						case 0: columns.get(i).setWidth(width * 3 / 20); break;
+						case 1: columns.get(i).setWidth(width / 20); break;
+						case 2: columns.get(i).setWidth(width / 10); break;
+						case 3: columns.get(i).setWidth(width / 5); break;
+						case 4: columns.get(i).setWidth(width * 10 / 20); break;
 						}
 					}
 					table.setSize(area.width, area.height);
 				}
 				else {
 					table.setSize(area.width, area.height);
-					for (int i = 0; i < 4; i++) {
+					for (int i = 0; i < 5; i++) {
 						switch (i) {
-						case 0: columns.get(i).setWidth(width / 20); break;
-						case 1: columns.get(i).setWidth(width / 10); break;
-						case 2: columns.get(i).setWidth(width / 5); break;
-						case 3: columns.get(i).setWidth(width / 20 * 12); break;
+						case 0: columns.get(i).setWidth(width * 3 / 20); break;
+						case 1: columns.get(i).setWidth(width / 20); break;
+						case 2: columns.get(i).setWidth(width / 10); break;
+						case 3: columns.get(i).setWidth(width / 5); break;
+						case 4: columns.get(i).setWidth(width * 10 / 20); break;
 						}
 					}
+				}
+			}
+			
+		});
+		table.addSelectionListener(new SelectionAdapter() {
+			
+			@Override
+			public void widgetSelected(SelectionEvent event) {
+				try {
+					int selectedEntry = table.getSelectionIndex();
+					IFile file = entries.getOrDefault(selectedEntry, null);
+					if (file != null) {
+						IDE.openEditor(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage(), file, true);
+						IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
+						IEditorPart editorpart = page.getActiveEditor();
+						if (editorpart != null && editorpart instanceof ITextEditor) {
+							ITextEditor editor = (ITextEditor) editorpart;
+							IDocumentProvider provider = editor.getDocumentProvider();
+							IDocument document = provider.getDocument(editor.getEditorInput());
+							try {
+								int line = Integer.valueOf(table.getSelection()[0].getText(1)) - 1;
+							    int length = document.getLineLength(line);
+							    int start = document.getLineOffset(line);
+							    editor.selectAndReveal(start, length);
+							}
+							catch (BadLocationException e) {
+								ConsolePrinter.println("[ERROR] Could not highlight line");
+							}
+						}
+					}
+				} catch (PartInitException e) {
+					ConsolePrinter.println("[ERROR] Could not open editor");
 				}
 			}
 			
@@ -108,12 +148,13 @@ public class JCollectView extends ViewPart {
 	 * Adds a new misuse entry to the table
 	 * @param m The misuse to be displayed
 	 */
-	private void addItem(Misuse m) {
+	private void addItem(Misuse m, String file) {
 		TableItem item = new TableItem(table, SWT.NONE);
-		item.setText(0, String.valueOf(m.line));
-		item.setText(1, m.importance);
-		item.setText(2, m.type);
-		item.setText(3, m.description);
+		item.setText(0, file);
+		item.setText(1, String.valueOf(m.line));
+		item.setText(2, m.importance);
+		item.setText(3, m.type);
+		item.setText(4, m.description);
 	}
 
 	/**
@@ -121,40 +162,15 @@ public class JCollectView extends ViewPart {
 	 * @param misuses List of misuses
 	 * @param file The file where the misuses were found
 	 */
-	public void setMisuses(List<Misuse> misuses, IFile file) {
-		table.removeAll();
-		for (Misuse misuse: misuses) {
-			addItem(misuse);
+	public void setMisuses(List<Misuse> misuses, IFile file, boolean clear) {
+		if (clear) {
+			table.removeAll();
+			entries.clear();
+			currentSize = 0;
 		}
-		/*SelectionListener oldListener = (SelectionListener) table.getListeners(SWT.Selection)[0];
-		table.removeSelectionListener(oldListener);*/
-		table.addSelectionListener(new SelectionAdapter() {
-			
-			@Override
-			public void widgetSelected(SelectionEvent event) {
-				try {
-					IDE.openEditor(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage(), file, true);
-					IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
-					IEditorPart editorpart = page.getActiveEditor();
-					if (editorpart != null && editorpart instanceof ITextEditor) {
-						ITextEditor editor = (ITextEditor) editorpart;
-						IDocumentProvider provider = editor.getDocumentProvider();
-						IDocument document = provider.getDocument(editor.getEditorInput());
-						try {
-							int line = Integer.valueOf(table.getSelection()[0].getText(0)) - 1;
-						    int length = document.getLineLength(line);
-						    int start = document.getLineOffset(line);
-						    editor.selectAndReveal(start, length);
-						}
-						catch (BadLocationException x) {
-							ConsolePrinter.println("[ERROR] Could not highlight line");
-						}
-					}
-				} catch (PartInitException e) {
-					ConsolePrinter.println("[ERROR] Could not open editor");
-				}
-			}
-			
-		});
+		for (Misuse misuse: misuses) {
+			addItem(misuse, file.getName());
+			entries.put(currentSize++, file);
+		}
 	}
 }

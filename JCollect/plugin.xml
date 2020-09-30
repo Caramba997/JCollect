@@ -15,9 +15,13 @@
 	
 	<extension point="org.eclipse.ui.commands">
 		<command
-			id="fc.jcollect.command"
-			name="Start"
+			id="fc.jcollect.singleanalysis"
+			name="Start Single"
 			defaultHandler="jcollect.handlers.AnalysisHandler"/>
+		<command
+			id="fc.jcollect.multianalysis"
+			name="Start Multi"
+			defaultHandler="jcollect.handlers.MultiAnalysisHandler"/>			
 	</extension>
 	
 	<extension point="org.eclipse.ui.menus">
@@ -28,9 +32,14 @@
 				id="fc.jcollect.menu"
 				icon="icons\Sample.png">
 				<command
-					commandId="fc.jcollect.command"
-					label="Analyse"
-					tooltip="Start Analysis"
+					commandId="fc.jcollect.singleanalysis"
+					label="Analyse file"
+					tooltip="Start to analyse a single file"
+					icon="icons\Sample.png"/>
+				<command
+					commandId="fc.jcollect.multianalysis"
+					label="Analyse multiple files"
+					tooltip="Start to analyse multiple files"
 					icon="icons\Sample.png"/>
 			</menu>
 		</menuContribution>

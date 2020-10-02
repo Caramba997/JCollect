@@ -55,7 +55,7 @@ public class NullArgument implements Directive {
 			boolean isMisuse = false;
 			String callVariable = TreeTraversal.getMethodCallExprVar(occ).getNameAsString();
 			String callMethod = occ.getNameAsString();
-			if (occ.getArguments().size() == totalArgs) {
+			if (occ.getArguments().size() == totalArgs && !TreeTraversal.hasTryCatch(occ, "NullPointerException")) {
 				Expression exp = occ.getArgument(argPos);
 				int line = occ.getBegin().get().line;
 				if (exp.isNullLiteralExpr()) {

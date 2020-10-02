@@ -15,7 +15,9 @@ import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.expr.NameExpr;
 import com.github.javaparser.ast.expr.VariableDeclarationExpr;
+import com.github.javaparser.ast.stmt.CatchClause;
 import com.github.javaparser.ast.stmt.ExpressionStmt;
+import com.github.javaparser.ast.stmt.TryStmt;
 
 /**
  * A class with some algorithms for tree walking
@@ -294,6 +296,26 @@ public class TreeTraversal {
 			}
 		} while (!topOfTreeOrFound);
 		return null;
+	}
+	
+	/**
+	 * Checks for existance of exception handling
+	 * @param expr The Expression
+	 * @return true, if the expression is surrounded by a try-catch-block
+	 */
+	public static boolean hasTryCatch(Expression expr, String exceptionType) {
+		Node node = TreeTraversal.findClosestParent(expr, TryStmt.class);
+		if (node != null) {
+			TryStmt tryStmt = (TryStmt) node;
+			NodeList<CatchClause> clauses = tryStmt.getCatchClauses();
+			for (CatchClause clause: clauses) {
+				String exception = clause.getParameter().getType().toString();
+				if (exception.equals(exceptionType) || exception.equals("RuntimeException") || exception.equals("Exception")) {
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 	
 }

@@ -41,11 +41,11 @@ public class MultiAnalysisHandler extends AbstractHandler {
 			}
 			boolean first = true;
 			IResource resource = Platform.getAdapterManager().getAdapter(selection.getFirstElement(), IResource.class);
-			if (resource.exists() && resource instanceof IContainer) {
+			if (selection.size() == 1 && resource.exists() && resource instanceof IContainer) {
 				ConsolePrinter.println("[EXECUTING] Analysing files contained in <" + ((IContainer) resource).getName() + ">");
 			}
 			else {
-				ConsolePrinter.println("[EXECUTING] Analysing all selected files" );
+				ConsolePrinter.println("[EXECUTING] Analysing selected resources" );
 			}
 			for (IFile file: selectedFiles) {
 				new DetectionMain(file, first);

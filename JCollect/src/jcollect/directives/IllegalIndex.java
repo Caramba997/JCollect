@@ -21,6 +21,7 @@ import jcollect.predicates.MethodDeclPredicate;
 import jcollect.predicates.MethodExprPredicate;
 import jcollect.types.CallProperties;
 import jcollect.types.Misuse;
+import jcollect.util.Patterns;
 import jcollect.util.TreeTraversal;
 
 /**
@@ -57,22 +58,22 @@ public class IllegalIndex implements Directive {
 		List<MethodCallExpr> occurences = cu.findAll(MethodCallExpr.class, new MethodExprPredicate<MethodCallExpr>(vars, method));
 		for (MethodCallExpr occ: occurences) {
 			CallProperties callProps = new CallProperties(TreeTraversal.getMethodCallExprVar(occ).getNameAsString(), occ.getNameAsString(), occ.getBegin().get().line);
-			if (occ.getArguments().size() == totalArgs) {
+			if (occ.getArguments().size() == totalArgs && !TreeTraversal.hasTryCatch(occ, "IndexOutOfBoundsException")) {
 				Expression exp = occ.getArgument(argPos);
 				traceParameterValue(cu, exp, callProps, misuses);
 			}
 		}
 		return misuses;
 	}
-	
+
 	private void traceParameterValue(CompilationUnit cu, Expression exp, CallProperties callProps, List<Misuse> misuses) {
 		if (exp.isIntegerLiteralExpr()) {
 			if (Integer.valueOf(((IntegerLiteralExpr) exp).getValue()) == 0) {
-				if (!callProps.method.contains("add") && !hasEmptyCheck(exp, callProps.variable)) {
+				if (!callProps.method.contains("add") && !hasIndexCheck(exp, callProps.variable, Patterns.EMPTYINDEXCHECKS)) {
 					misuses.add(new Misuse(NAME, callProps.line, "You call \"" + callProps.method + "\" on \"" + callProps.variable + "\" with the index \"0\". You should make sure this collection is not empty!", Misuse.IMPORTANCE_WARNING));
 				}
 			}
-			else if (!hasIndexCheck(exp, callProps.variable)) {
+			else if (!hasIndexCheck(exp, callProps.variable, Patterns.NUMINDEXCHECKS)) {
 				misuses.add(new Misuse(NAME, callProps.line, "The index \"" + exp + "\" in \"" + callProps.method + "\" on \"" + callProps.variable + "\" may be out of bounds. You should make sure this index is legal!", Misuse.IMPORTANCE_WARNING));
 			}
 		}
@@ -83,9 +84,11 @@ public class IllegalIndex implements Directive {
 		}
 		else if (exp.isNameExpr()) {
 			if (isIllegalIndex((NameExpr) exp)) {
-				misuses.add(new Misuse(NAME, callProps.line, "The index \"" +  exp + "\" in \"" + callProps.method + "\" on \"" + callProps.variable + "\" is negative and will cause an error!", Misuse.IMPORTANCE_MISUSE));
+				if (!hasIndexCheck(exp, callProps.variable, Patterns.NEGATIVEINDEXCHECKS)) {
+					misuses.add(new Misuse(NAME, callProps.line, "The index \"" +  exp + "\" in \"" + callProps.method + "\" on \"" + callProps.variable + "\" is negative and will cause an error!", Misuse.IMPORTANCE_MISUSE));
+				}
 			}
-			else if (!hasIndexCheck(exp, callProps.variable)) {
+			else if (!hasIndexCheck(exp, callProps.variable, Patterns.VARINDEXCHECKS)) {
 				checkVariableValue(cu, (NameExpr) exp, callProps, misuses);
 			}
 		}
@@ -115,11 +118,11 @@ public class IllegalIndex implements Directive {
 							Expression expr = exprOpt.get();
 							if (expr.isIntegerLiteralExpr()) {
 								if (Integer.valueOf(((IntegerLiteralExpr) expr).getValue()) == 0) {
-									if (!callProps.method.contains("add") && !hasEmptyCheck(expr, callProps.variable)) {
+									if (!callProps.method.contains("add") && !hasIndexCheck(expr, callProps.variable, Patterns.EMPTYINDEXCHECKS)) {
 										misuses.add(new Misuse(NAME, callProps.line, "You index in \"" + callProps.method + "\" on \"" + callProps.variable + "\" may be \"0\". You should make sure this collection is not empty!", Misuse.IMPORTANCE_WARNING));
 									}
 								}
-								else if (!hasIndexCheck(expr, callProps.variable)) {
+								else if (!hasIndexCheck(expr, callProps.variable, Patterns.NUMINDEXCHECKS)) {
 									misuses.add(new Misuse(NAME, callProps.line, "The index \"" + exp + "\" in \"" + callProps.method + "\" on \"" + callProps.variable + "\" may be out of bounds. You should make sure this index is legal!", Misuse.IMPORTANCE_WARNING));
 								}
 							}
@@ -132,7 +135,7 @@ public class IllegalIndex implements Directive {
 								if (isIllegalIndex((NameExpr) expr)) {
 									misuses.add(new Misuse(NAME, callProps.line, "The index \"" +  exp + "\" in \"" + callProps.method + "\" on \"" + callProps.variable + "\" may be negative and cause an error!", Misuse.IMPORTANCE_WARNING));
 								}
-								else if (!hasIndexCheck(expr, callProps.variable)) {
+								else if (!hasIndexCheck(expr, callProps.variable, Patterns.VARINDEXCHECKS)) {
 									checkVariableValue(cu, (NameExpr) expr, callProps, misuses);
 								}
 							}
@@ -220,7 +223,7 @@ public class IllegalIndex implements Directive {
 	 * @param varName The name of the variable on which the method is called
 	 * @return true, if it is checked
 	 */
-	private boolean hasIndexCheck(Expression name, String variable) {
+	private boolean hasIndexCheck(Expression name, String variable, String[] pattern) {
 		List<IfStmt> ifStmts = TreeTraversal.findParents(name, IfStmt.class);
 		List<String> conditions = new LinkedList<>();
 		for (IfStmt ifStmt: ifStmts) {
@@ -232,41 +235,18 @@ public class IllegalIndex implements Directive {
 		}
 		List<ForStmt> forStmts = TreeTraversal.findParents(name, ForStmt.class);
 		for (ForStmt forStmt: forStmts) {
-			conditions.add(forStmt.getCompare().get().toString());
-		}
-		for (String condition: conditions) {
-			String unified = condition.replace(" ", "");
-			if (unified.contains(variable + ".size()>" + name) || unified.contains(name + "<" + variable + ".size()>")) {
-				return true;
+			Optional<Expression> forOpt = forStmt.getCompare();
+			if (forOpt.isPresent()) {
+				conditions.add(forOpt.get().toString());
 			}
 		}
-		return false;
-	}
-	
-	/**
-	 * Checks if the value of the given variable is checked for emptyness in an if statement, while- or forloop
-	 * @param name The name of the variable to be checked
-	 * @param variable The name of the variable on which the method is called
-	 * @return true, if it is checked
-	 */
-	private boolean hasEmptyCheck(Expression name, String variable) {
-		List<IfStmt> ifStmts = TreeTraversal.findParents(name, IfStmt.class);
-		List<String> conditions = new LinkedList<>();
-		for (IfStmt ifStmt: ifStmts) {
-			conditions.add(ifStmt.getCondition().toString());
-		}
-		List<WhileStmt> whileStmts = TreeTraversal.findParents(name, WhileStmt.class);
-		for (WhileStmt whileStmt: whileStmts) {
-			conditions.add(whileStmt.getCondition().toString());
-		}
-		List<ForStmt> forStmts = TreeTraversal.findParents(name, ForStmt.class);
-		for (ForStmt forStmt: forStmts) {
-			conditions.add(forStmt.getCompare().get().toString());
-		}
 		for (String condition: conditions) {
 			String unified = condition.replace(" ", "");
-			if (unified.contains(variable + ".size()>0") || unified.contains("0<" + variable + ".size()") || unified.contains("!" + variable + ".isEmpty()") || unified.contains(variable + ".isEmpty()==false")) {
-				return true;
+			String[] filledInPattern = Patterns.getIndexPatterns(pattern, variable, name.toString());
+			for (String s: filledInPattern) {
+				if (unified.contains(s)) {
+					return true;
+				}
 			}
 		}
 		return false;

@@ -11,7 +11,7 @@ import com.github.javaparser.printer.YamlPrinter;
 public class ASTDebugger {
 	
 	public static void main(String[] args) {
-		File file = new File("C:/Users/Finn/Desktop/Uni/Eclipse/Plugin/JCollect/src/dev/ASTTest.java");
+		File file = new File("C:/Users/Finn/git/JCollect/JCollect/src/dev/ASTTest.java");
 		try {
 			CompilationUnit cu = StaticJavaParser.parse(file);
 			YamlPrinter printer = new YamlPrinter(true);

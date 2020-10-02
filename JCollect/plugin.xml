@@ -34,12 +34,12 @@
 				<command
 					commandId="fc.jcollect.singleanalysis"
 					label="Analyse file"
-					tooltip="Start to analyse a single file"
+					tooltip="Start to analyse a single file. You need to select a single .java file."
 					icon="icons\Sample.png"/>
 				<command
 					commandId="fc.jcollect.multianalysis"
 					label="Analyse multiple files"
-					tooltip="Start to analyse multiple files"
+					tooltip="Start to analyse multiple files. You can select one or multiple resources. A resource may be a file, folder, package or project."
 					icon="icons\Sample.png"/>
 			</menu>
 		</menuContribution>

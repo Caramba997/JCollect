@@ -21,11 +21,13 @@ public class NoMisuseExamples {
 		Index6();
 		Index7();
 		Index8();
+		Index9(3);
 		Null1();
 		Null2();
 		Null3();
 		Null4();
 		Null5();
+		Null6(null);
 		Unsupported1();
 		Combined1();
 	}
@@ -74,7 +76,7 @@ public class NoMisuseExamples {
 		int index = Integer.parseInt("-2");
 		List<String> list = new LinkedList<>();
 		try {
-			list.get(index); //Error: Negative index
+			list.get(index);
 		}
 		catch (Exception e) {
 			list.add("Exception");
@@ -101,7 +103,17 @@ public class NoMisuseExamples {
 	
 	public static void Index8() {
 		List<Integer> list = new Stack<>();
-		list.add(NUMBER, 3); //Error: Negative index
+		list.add(NUMBER, 3);
+	}
+	
+	public static int Index9(int index) {
+		List<Integer> list = new LinkedList<>();
+		list.add(42);
+		list.add(13);
+		if (index >= 0 && index < list.size()) {
+			return list.get(index);
+		}
+		return 0;
 	}
 	
 	public static void Null1() {
@@ -150,7 +162,13 @@ public class NoMisuseExamples {
 		if (list.containsAll(list2)) {
 			return;
 		}
-		
+	}
+	
+	public static void Null6(List<String> strings) {
+		List<String> list = new ArrayList<>();
+		if (strings != null) {
+			list.addAll(strings);
+		}
 	}
 	
 	public static void Unsupported1() {

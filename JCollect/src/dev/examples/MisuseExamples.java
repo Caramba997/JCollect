@@ -24,12 +24,14 @@ public class MisuseExamples {
 			case "index7": Index7(); break;
 			case "index8": Index8(); break;
 			case "index9": Index9(); break;
+			case "index10": Index10(1); break;
 			case "null1": Null1(); break;
 			case "null2": Null2(); break;
 			case "null3": Null3(); break;
 			case "null4": Null4(); break;
 			case "null5": Null5(); break;
 			case "null6": Null6(); break;
+			case "null7": Null7(null); break;
 			case "unsupported1": Unsupported1(); break;
 			case "unsupported2": Unsupported2(); break;
 			case "unsupported3": Unsupported3(); break;
@@ -88,7 +90,7 @@ public class MisuseExamples {
 			list.add("Element");
 		}
 		for (int i = 0; i <= 3; i++) {
-			list.get(i); //Error: Index out of bounds for i=3
+			list.get(i); //Error: Index out of bounds for i=3 when elements > 2
 		}
 	}
 	
@@ -107,6 +109,11 @@ public class MisuseExamples {
 		list.add("One");
 		List<String> list2 = list;
 		list2.remove(1); //Error: Index out of bounds
+	}
+	
+	public static String Index10(int index) {
+		List<String> list = new ArrayList<>();
+		return list.get(index); //Error for any given index
 	}
 	
 	public static void Null1() {
@@ -161,7 +168,11 @@ public class MisuseExamples {
 		if (list.containsAll(list2)) { //Error: null
 			return;
 		}
-		
+	}
+	
+	public static void Null7(List<String> list) {
+		List<String> list2 = new ArrayList<>();
+		list2.addAll(list);
 	}
 	
 	public static void Unsupported1() {

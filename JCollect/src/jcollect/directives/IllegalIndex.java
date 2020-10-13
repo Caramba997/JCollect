@@ -89,7 +89,15 @@ public class IllegalIndex implements Directive {
 				}
 			}
 			else if (!hasIndexCheck(exp, callProps.variable, Patterns.VARINDEXCHECKS)) {
-				checkVariableValue(cu, (NameExpr) exp, callProps, misuses);
+				List<String> types = new LinkedList<>();
+				types.add("int");
+				types.add("Integer");
+				if (TreeTraversal.isParameter((NameExpr) exp, types, false)) {
+					misuses.add(new Misuse(NAME, callProps.line, "The index parameter \"" +  exp + "\" in \"" + callProps.method + "\" on \"" + callProps.variable + "\" is unchecked and can easily cause an error by passing an illegal parameter value!", Misuse.IMPORTANCE_WARNING));
+				}
+				else {
+					checkVariableValue(cu, (NameExpr) exp, callProps, misuses);
+				}
 			}
 		}
 		else if (exp.isMethodCallExpr()) {

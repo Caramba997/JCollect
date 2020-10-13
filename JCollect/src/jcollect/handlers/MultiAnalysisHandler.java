@@ -47,11 +47,16 @@ public class MultiAnalysisHandler extends AbstractHandler {
 			else {
 				ConsolePrinter.println("[EXECUTING] Analysing selected resources" );
 			}
+			int misuseCounter = 0;
+			long startTime = System.nanoTime();
 			for (IFile file: selectedFiles) {
-				new DetectionMain(file, first);
+				DetectionMain detector = new DetectionMain(file, first);
+				misuseCounter += detector.getMisuseCount();
 				first = false;
 			}
-			ConsolePrinter.println("[ENDED]");
+			long endTime = System.nanoTime();
+			long timeTaken = (endTime - startTime) / 1000000;
+			ConsolePrinter.println("[ENDED] Total time: " + timeTaken + "ms, Total misuses: " + misuseCounter);
 			ConsolePrinter.println("--------------------");
 		}
 		else {

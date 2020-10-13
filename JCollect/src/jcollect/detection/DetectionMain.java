@@ -8,7 +8,6 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.Platform;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.ide.IDE;
@@ -28,6 +27,8 @@ import jcollect.views.JCollectView;
  */
 public class DetectionMain {
 
+	private int misuseCounter = 0;
+	
 	/**
 	 * Create the process to find misuses in the given file. At first, the imports of a class are checked to determine which APIs are used.
 	 * The found APIs are passed to the next step.
@@ -35,7 +36,7 @@ public class DetectionMain {
 	 */
 	public DetectionMain(IFile ifile, boolean first) {
 		long startTime = System.nanoTime();
-		File file = Platform.getLocation().append(ifile.getFullPath()).toFile();
+		File file = new File(ifile.getLocationURI());
 		ConsolePrinter.println("Starting to parse file <" + file.getAbsolutePath() + "> ...");
 		try {
 			CompilationUnit cu = StaticJavaParser.parse(file);
@@ -50,7 +51,8 @@ public class DetectionMain {
 			long endTime = System.nanoTime();
 			long timeTaken = (endTime - startTime) / 1000000;
 			if (misuses.size() > 0) {
-				ConsolePrinter.println("[FINISHED] Time: " + timeTaken + "ms, " + misuses.size() + " Misuse(s) found:");
+				ConsolePrinter.println("[FINISHED] Time: " + timeTaken + "ms, Misuses: " + misuses.size());
+				misuseCounter = misuses.size();
 			}
 			else {
 				ConsolePrinter.println("[FINISHED] Time: " + timeTaken + "ms, No misuses found");
@@ -113,6 +115,14 @@ public class DetectionMain {
 				ConsolePrinter.println("[ERROR] Could not create marker");
 			}
 		}
+	}
+	
+	/**
+	 * Get the number of misuses found
+	 * @return
+	 */
+	public int getMisuseCount() {
+		return misuseCounter;
 	}
 	
 }

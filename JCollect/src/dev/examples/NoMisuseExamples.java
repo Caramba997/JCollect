@@ -127,7 +127,7 @@ public class NoMisuseExamples {
 		list2 = new ArrayList<>();
 		list2.add(new Object());
 		if (list.size() >= 1) {
-			list.addAll(1, list2); //Error: null
+			list.addAll(1, list2);
 		}
 	}
 	

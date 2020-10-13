@@ -26,7 +26,7 @@ public class Debugger {
 
 	public static void main(String[] args) {
 		long startTime = System.nanoTime();
-		File file = new File("C:/Users/Finn/Desktop/Uni/Eclipse/Plugin/JCollect/src/dev/ClassWithMisuses.java");
+		File file = new File("C:/Users/Finn/Desktop/Uni/Eclipse/Plugin/zxingjava/src/test/data/synthetic_survey/versions/jsl/repo/src/mubench/examples/survey/ListGet.java");
 		try {
 			System.out.println("Starting to parse file: " + file.getAbsolutePath());
 			CompilationUnit cu = StaticJavaParser.parse(file);

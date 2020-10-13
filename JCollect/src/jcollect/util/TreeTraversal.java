@@ -9,6 +9,8 @@ import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.body.FieldDeclaration;
+import com.github.javaparser.ast.body.MethodDeclaration;
+import com.github.javaparser.ast.body.Parameter;
 import com.github.javaparser.ast.body.VariableDeclarator;
 import com.github.javaparser.ast.expr.AssignExpr;
 import com.github.javaparser.ast.expr.Expression;
@@ -181,6 +183,15 @@ public class TreeTraversal {
 				}
 			}
 		}
+		List<Parameter> parameters = cu.findAll(Parameter.class);
+		for (Parameter param: parameters) {
+			for (String t: types) {
+				if (param.getTypeAsString().contains(t)) {
+					result.add(param.getNameAsString());
+					break;
+				}
+			}
+		}
 		return result;
 	}
 
@@ -316,6 +327,29 @@ public class TreeTraversal {
 			}
 		}
 		return false;
+	}
+	
+	/**
+	 * Checks if a variable is a method parameter
+	 * @param name The variable
+	 * @return true, if the variable is a Parameter
+	 */
+	public static boolean isParameter(NameExpr name, List<String> types, boolean invertTypes) {
+		MethodDeclaration methodDecl = findClosestParent(name, MethodDeclaration.class);
+		if (methodDecl != null) {
+			List<Parameter> parameters = methodDecl.getParameters();
+			for (Parameter param: parameters) {
+				if (param.getNameAsString().equals(name.getNameAsString())) {
+					if (invertTypes && !types.contains(param.getTypeAsString())) {
+						return true;
+					}
+					else if (!invertTypes && types.contains(param.getTypeAsString())) {
+						return true;
+					}
+				}
+			}
+		}
+		return false;		
 	}
 	
 }

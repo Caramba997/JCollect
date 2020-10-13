@@ -1,6 +1,7 @@
 package jcollect.directives;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 
@@ -126,17 +127,25 @@ public class NullArgument implements Directive {
 	 */
 	private boolean isNameVarNull(CompilationUnit cu, NameExpr name, List<Misuse> misuses, int line, String variable, String method) {
 		if (!hasNameVarNullCheck(name)) {
-			Expression assignment = TreeTraversal.findNearestAssignment(name);
-			if (assignment != null) {
-				if (assignment.isNullLiteralExpr()) {
-					return true;
-				}
-				else if (assignment.isNameExpr()) {
-					return isNameVarNull(cu, (NameExpr) assignment, misuses, line, variable, method);
-				}
-				else if (!isPrimitiveType(TreeTraversal.getDeclarationType(name)) && assignment.isMethodCallExpr()) {
-					if (methodReturnsNull(cu, (MethodCallExpr) assignment)) {
-						misuses.add(new Misuse(NAME, line, "An argument in \"" + method + "\" on \"" + variable + "\" may be null. You should make sure it is not!", Misuse.IMPORTANCE_WARNING));
+			List<String> types = new LinkedList<>();
+			types.add("int");
+			types.add("Integer");
+			if (TreeTraversal.isParameter(name, types, true)) {
+				misuses.add(new Misuse(NAME, line, "An parameter argument in \"" + method + "\" on \"" + variable + "\" may be initialized with null. You should add a condition check!", Misuse.IMPORTANCE_WARNING));
+			}
+			else {
+				Expression assignment = TreeTraversal.findNearestAssignment(name);
+				if (assignment != null) {
+					if (assignment.isNullLiteralExpr()) {
+						return true;
+					}
+					else if (assignment.isNameExpr()) {
+						return isNameVarNull(cu, (NameExpr) assignment, misuses, line, variable, method);
+					}
+					else if (!isPrimitiveType(TreeTraversal.getDeclarationType(name)) && assignment.isMethodCallExpr()) {
+						if (methodReturnsNull(cu, (MethodCallExpr) assignment)) {
+							misuses.add(new Misuse(NAME, line, "An argument in \"" + method + "\" on \"" + variable + "\" may be null. You should make sure it is not!", Misuse.IMPORTANCE_WARNING));
+						}
 					}
 				}
 			}

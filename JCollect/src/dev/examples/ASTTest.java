@@ -1,11 +1,13 @@
 package dev.examples;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class ASTTest {
 
-	public static void main(String[] args) {
+	public Object misuse(List<Object> l, int i) {
+		return l.get(i);
+	}
+	/*public static void main(String[] args) {
 		List<String> list = new ArrayList<>();
 		try {
 			list.add("ONE");
@@ -21,7 +23,7 @@ public class ASTTest {
 		return null;
 	}
 	
-	/*private String s;
+	private String s;
 	
 	private ASTTest(String param) {
 		s = evalParam(param);
